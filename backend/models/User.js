@@ -15,12 +15,12 @@ const userSchema = {
     }
 }
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema)
 
 const validateUser = async (email, password) => {
-    const user = await User.find({email});
+    const user = await User.find({ email, password })
 
-    if(user.password === password) {
+    if (user.password === password) {
         return {
             email: user.email,
             name: user.name
@@ -28,7 +28,7 @@ const validateUser = async (email, password) => {
     } else {
         return null
     }
-    
+
 }
 
 module.exports = {

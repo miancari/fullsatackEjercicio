@@ -1,26 +1,30 @@
-const express = require ('express');
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const userModel = require('./models/User');
-const TaskRoutes = require('./routes/TaskRoutes');
-const PORT = 3000;
+const express = require('express')
+const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
+const cors = require('cors')
+const userModel = require('./models/User')
+const ContactRoutes = require('./routes/ContactRoutes')
+const PORT = 3000
+require('dotenv').config()
 
-const SECRET_KEY= 'desde septiembre se siente que viene diciembre';
+const SECRET_KEY = process.env.SECRET_KEY
 
-const server = express();
+const server = express()
+server.use(cors())
 
 server.use(express.json())
 
-server.use('/api/v1/auth', (req, res) => {
-    const {email, password} = req.body
+//localhost:3000/auth
+server.post('/api/v1/auth', (req, res) => {
+    const { email, password } = req.body
 
-    const validatedUser = userModel.validateUser(email,password)
+    const validatedUser = userModel.validateUser(email, password)
 
-    if(validatedUser) {
-        const token = jwt.sign({validatedUser},SECRET_KEY,{expiresIn: '5m'})
-        res.status(201).send({token})
+    if (validatedUser) {
+        const token = jwt.sign({ validatedUser }, SECRET_KEY, { expiresIn: '5m' })
+        res.status(201).send({ token })
     } else {
-        res.status(401).send({message: 'correo o contraseña incorrectos'})
+        res.status(401).send({ message: 'Correo o contraseña incorrectos' })
     }
 
 })
@@ -29,12 +33,12 @@ const validateToken = (req, res, next) => {
     const authHeader = req.get('authorization')
 
     if (authHeader) {
-        //Bearer <token>
+        // Bearer <token>
         const accessToken = authHeader.split(' ')[1]
 
         jwt.verify(accessToken, SECRET_KEY, (error, decode) => {
             if (error) {
-                res.status(401).send({ message: 'token no valido' })
+                res.status(401).send({ message: 'Token no valido' })
             } else {
                 next()
             }
@@ -44,20 +48,19 @@ const validateToken = (req, res, next) => {
     }
 }
 
-server.use('/api/v1/tasks', validateToken, TaskRoutes);
+server.use('/api/v1/contacts', validateToken, ContactRoutes)
 
 const mongooseConnect = async () => {
-    try{
-        await 
-        mongoose.connect('mongodb+srv://miancari:Millos07@cluster0.1mljg8b.mongodb.net/TaskApp?retryWrites=true&w=majority')
-        console.log('conexion exitosa') 
-    }catch(error){
-        console.log(error)
+    try {
+        await mongoose.connect(process.env.MONGO_URL)
+        console.log('Conexión exitosa')
+    } catch (error) {
+        console.error(error)
     }
 }
 
 mongooseConnect()
 
 server.listen(PORT, () => {
-    console.log(`Escuchando en el puerto ${PORT}`);
+    console.log(`Escuchando en el puerto ${PORT}`)
 })
